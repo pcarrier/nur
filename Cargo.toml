@@ -1,0 +1,34 @@
+[package]
+name = "nur"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+sled = "0.34.7"
+http-cache-reqwest = "0.9.0"
+reqwest-middleware = "0.2.2"
+dirs = "5.0.1"
+url = "2.3.1"
+mimalloc = "0.1.37"
+
+[dependencies.rquickjs]
+version = "0.1.7"
+default-features = false
+features = ["classes", "rust-alloc", "loader", "array-buffer", "futures", "tokio", "macro", "phf"]
+
+[dependencies.reqwest]
+version = "0.11.17"
+default-features = false
+features = ["native-tls-vendored"]
+
+[dependencies.tokio]
+version = "1.28.1"
+default-features = false
+features = ["macros", "rt-multi-thread"]
+
+[profile.release]
+strip = true
+opt-level = "z"
+lto = true
+codegen-units = 1
+panic = "abort"
