@@ -1,0 +1,10 @@
+FROM --platform=linux/aarch64 ubuntu AS base
+FROM base AS builder
+RUN apt update && apt install -y curl xz-utils libcurl4-openssl-dev binutils && rm -rf /var/lib/apt/lists/*
+RUN mkdir /zig && curl -f https://ziglang.org/builds/zig-linux-aarch64-0.11.0-dev.3202+378264d40.tar.xz | tar xJ --strip-components=1 -C /zig
+ADD . /app
+WORKDIR /app
+RUN /zig/zig build -Doptimize=ReleaseSmall && strip zig-out/bin/nur
+FROM base AS runner
+RUN apt update && apt install -y libcurl4-openssl-dev && rm -rf /var/lib/apt/lists/*
+COPY --from=builder /app/zig-out/bin/nur /bin/nur

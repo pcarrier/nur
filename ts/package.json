@@ -1,0 +1,6 @@
+{
+    "license": "0BSD",
+    "devDependencies": {
+        "typescript": "^5.0.4"
+    }
+}

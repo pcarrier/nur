@@ -1,0 +1,10 @@
+FROM --platform=linux/aarch64 alpine AS base
+FROM base AS builder
+RUN apk --no-cache add curl-dev binutils
+RUN mkdir /zig && wget -O- https://ziglang.org/builds/zig-linux-aarch64-0.11.0-dev.3202+378264d40.tar.xz | tar xJ --strip-components=1 -C /zig
+ADD . /app
+WORKDIR /app
+RUN /zig/zig build -Doptimize=ReleaseSmall && strip zig-out/bin/nur
+FROM base AS runner
+RUN apk --no-cache add libcurl
+COPY --from=builder /app/zig-out/bin/nur /bin/nur
