@@ -1,5 +1,6 @@
-use std::env;
+use std::{env, io};
 use std::error::Error;
+use std::io::Read;
 
 use http_cache_reqwest::{CACacheManager, Cache, CacheMode, HttpCache};
 use reqwest::Client;
@@ -12,6 +13,12 @@ static GLOBAL: mimalloc::MiMalloc = mimalloc::MiMalloc;
 
 fn print(msg: String) {
     println!("{msg}");
+}
+
+fn full_stdin() -> String {
+    let mut str = String::new();
+    io::stdin().read_to_string(&mut str).unwrap();
+    str
 }
 
 #[tokio::main]
@@ -46,6 +53,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     ctx.with(|ctx| -> Result<(), Box<dyn Error>> {
         let globals = ctx.globals();
         globals.set("print", Func::new("print", print))?;
+        globals.set("full_stdin", Func::new("full_stdin", full_stdin))?;
         ctx.compile(url.to_string(), body)?;
         Ok(())
     })
