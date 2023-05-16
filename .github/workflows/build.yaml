@@ -1,27 +1,70 @@
 on: push
 
 jobs:
-  build:
+  linux_build:
     name: build ${{ matrix.target }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         include:
-          - target: x86_64-pc-windows-gnu
           - target: x86_64-unknown-linux-musl
+            prep:
+              sudo apt install -y musl-tools
           - target: aarch64-unknown-linux-musl
+            prep: |
+              curl -sf https://musl.cc/aarch64-linux-musl-cross.tgz | sudo tar xz -C /usr --strip-components=1
+    steps:
+      - uses: actions/checkout@master
+      - name: build
+        run: |
+          ${{ matrix.prep }}
+          rustup toolchain install --force-non-host stable-${{ matrix.target }}
+          rustup target add ${{ matrix.target }}
+          cargo build --release --target ${{ matrix.target }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/nur
+
+  windows_build:
+    name: build ${{ matrix.target }}
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: x86_64-pc-windows-msvc
+          - target: aarch64-pc-windows-msvc
+    steps:
+      - uses: actions/checkout@master
+      - name: build
+        run: |
+          rustup toolchain install --force-non-host stable-${{ matrix.target }}
+          rustup target add ${{ matrix.target }}
+          cargo build --release --target ${{ matrix.target }}
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/nur.exe
+
+  mac_build:
+    name: build ${{ matrix.target }}
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
           - target: x86_64-apple-darwin
           - target: aarch64-apple-darwin
     steps:
       - uses: actions/checkout@master
       - name: build
         run: |
-          pip3 install ziglang
+          
           rustup toolchain install --force-non-host stable-${{ matrix.target }}
           rustup target add ${{ matrix.target }}
-          cargo install cargo-zigbuild
-          cargo zigbuild --release --target ${{ matrix.target }}
+          cargo build --release --target ${{ matrix.target }}
       - uses: actions/upload-artifact@v3
         with:
           name: ${{ matrix.target }}
