@@ -14,7 +14,7 @@ mimalloc = "0.1.37"
 [dependencies.rquickjs]
 version = "0.1.7"
 default-features = false
-features = ["classes", "rust-alloc", "loader", "array-buffer", "futures", "tokio", "macro", "phf"]
+features = ["bindgen", "classes", "rust-alloc", "loader", "array-buffer", "futures", "tokio", "macro", "phf"]
 
 [dependencies.reqwest]
 version = "0.11.17"
