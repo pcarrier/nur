@@ -1,7 +1,8 @@
 use io::{stderr, stdin, stdout};
 use std::error::Error;
 use std::io;
-use std::io::{Read, Stderr, Stdin, Stdout};
+use std::io::{Read, Stderr, Stdin, Stdout, Write};
+
 use http_cache_reqwest::{CACacheManager, Cache, CacheMode, HttpCache};
 use reqwest::{Client, StatusCode};
 use reqwest_middleware::{ClientBuilder, ClientWithMiddleware};
@@ -65,23 +66,25 @@ impl Nur {
         self.fetch(decorated).await
     }
 
-    fn print(&self, msg: String) {
-        println!("{msg}");
+    fn print(&mut self, msg: String) -> Result<(), Box<dyn Error>> {
+        self.stdout.write(msg.as_bytes())?;
+        self.stdout.flush()?;
+        Ok(())
     }
 
-    fn full_stdin(mut self) -> String {
+    fn full_stdin(mut self) -> Result<String, Box<dyn Error>> {
         let mut str = String::new();
-        self.stdin.read_to_string(&mut str).unwrap();
-        str
+        self.stdin.read_to_string(&mut str)?;
+        Ok(str)
     }
 
-    pub(crate) async fn run(&self) -> Result<(), Box<dyn Error>> {
+    pub(crate) async fn run(&mut self) -> Result<(), Box<dyn Error>> {
         let code = self.fetch_js(self.url.clone()).await?;
         let ctx = Context::full(&self.rt)?;
         ctx.with(move |ctx| -> Result<(), Box<dyn Error>> {
             let globals = ctx.globals();
-            globals.set("print", Func::new("print", |v| self.print(v)))?;
-            globals.set("full_stdin", Func::new("full_stdin", || self.full_stdin()))?;
+            globals.set("print", Func::new("print", |v| self.print(v).unwrap()))?;
+            globals.set("full_stdin", Func::new("full_stdin", || self.full_stdin().unwrap()))?;
             ctx.compile(self.url.to_string(), code)?;
             Ok(())
         })
