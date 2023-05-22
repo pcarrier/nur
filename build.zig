@@ -6,7 +6,7 @@ pub fn build(b: *std.build.Builder) void {
 
     const nur = b.addExecutable(.{
         .name = "nur",
-        .root_source_file = .{ .path = "src/main.zig" },
+        .root_source_file = .{ .path = "src/nur.zig" },
         .target = target,
         .optimize = optimize,
     });
@@ -29,8 +29,6 @@ pub fn build(b: *std.build.Builder) void {
         "-DCONFIG_BIGNUM",
         "-DCONFIG_VERSION=\"2021-03-27\"",
     });
-    nur.addIncludePath("deps/quickjs");
-    nur.linkLibrary(quickjs);
 
     const lmdb = b.addStaticLibrary(.{
         .name = "lmdb",
@@ -45,10 +43,15 @@ pub fn build(b: *std.build.Builder) void {
         "-Wall",
         "-Wextra",
     });
+
+    nur.addIncludePath("deps/quickjs");
+    nur.linkLibrary(quickjs);
+
     nur.addIncludePath("deps/liblmdb");
     nur.linkLibrary(lmdb);
 
-    nur.linkSystemLibrary("curl");
+    nur.linkSystemLibrary("libcurl");
+    nur.linkSystemLibrary("libuv");
 
     b.installArtifact(nur);
 
@@ -60,11 +63,20 @@ pub fn build(b: *std.build.Builder) void {
     const run_step = b.step("run", "Run the app");
     run_step.dependOn(&run_cmd.step);
 
-    const exe_tests = b.addTest(.{
-        .root_source_file = .{ .path = "src/main.zig" },
-        .target = target,
-        .optimize = optimize,
-    });
     const test_step = b.step("test", "Run unit tests");
-    test_step.dependOn(&exe_tests.step);
+    for (&[_][]const u8{ "src/curl.zig", "src/dirs.zig", "src/lmdb.zig", "src/nur.zig", "src/quickjs.zig" }) |path| {
+        const t = b.addTest(.{
+            .root_source_file = .{ .path = path },
+            .target = target,
+            .optimize = optimize,
+        });
+
+        t.addIncludePath("deps/quickjs");
+        t.linkLibrary(quickjs);
+
+        t.addIncludePath("deps/liblmdb");
+        t.linkLibrary(lmdb);
+
+        test_step.dependOn(&t.step);
+    }
 }
