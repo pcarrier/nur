@@ -2,6 +2,8 @@ const std = @import("std");
 const lmdb = @import("lmdb.zig");
 const quickjs = @import("quickjs.zig");
 
+const LICENSE = @embedFile("../LICENSE.md");
+
 pub fn main() !void {
     const db = lmdb.Environment.init(".nur", .{});
     defer db.deinit();

@@ -746,7 +746,7 @@ inline fn ResultOf(comptime function: anytype) type {
 }
 
 inline fn call(comptime function: anytype, args: anytype) ResultOf(function) {
-    const rc = @call(.{}, function, args);
+    const rc = @call(.auto, function, args);
     if (ResultOf(function) == void) return rc;
 
     return switch (rc) {
@@ -1355,7 +1355,7 @@ test "Cursor: interact with batches of fixed-sized items in a database with dupl
     try tx.setItemOrder(db, U64.order);
 
     comptime var items: [512]u64 = undefined;
-    inline for (items, 0..) |*item, i| item.* = @as(u64, i);
+    inline for (items, 0..) |item, i| item = @as(u64, i);
 
     const expected = comptime .{
         .{ "Set A", &items },
