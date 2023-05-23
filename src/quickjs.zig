@@ -3,9 +3,9 @@ const c = @cImport(@cInclude("quickjs.h"));
 pub const Runtime = packed struct {
     const Self = @This();
 
-    inner: *c.QuickJSRuntime,
+    inner: ?*c.JSRuntime,
 
-    pub inline fn init() !Self {
+    pub inline fn init() Self {
         return Self{ .inner = c.JS_NewRuntime() };
     }
 
@@ -17,10 +17,10 @@ pub const Runtime = packed struct {
 pub const Context = packed struct {
     const Self = @This();
 
-    inner: *c.QuickJSContext,
+    inner: ?*c.JSContext,
 
-    pub inline fn init(rt: Runtime) !Self {
-        return Self{ .inner = c.JS.NewContext(rt.inner) };
+    pub inline fn init(rt: Runtime) Self {
+        return Self{ .inner = c.JS_NewContext(rt.inner) };
     }
 
     pub inline fn deinit(self: Self) void {
